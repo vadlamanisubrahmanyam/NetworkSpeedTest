@@ -1,0 +1,8 @@
+{
+  "appId": "com.subrahmanyam.networkspeedtest",
+  "appName": "Network Speed Test",
+  "webDir": "web",
+  "android": {
+    "allowMixedContent": false
+  }
+}

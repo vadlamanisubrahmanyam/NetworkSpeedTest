@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0b1020" />
+  <meta name="description" content="Free network speed test — download, upload, ping, jitter, bufferbloat and connection details for Wi-Fi, mobile data and Ethernet. Developed by Subrahmanyam." />
+  <meta name="author" content="Subrahmanyam" />
+  <title>Network Speed Test</title>
+  <link rel="icon" href="icon.svg" type="image/svg+xml" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="css/app.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <img src="icon.svg" alt="" width="28" height="28" />
+        <span>Network Speed Test</span>
+      </div>
+      <nav class="tabs" role="tablist">
+        <button class="tab active" data-view="test" role="tab">Test</button>
+        <button class="tab" data-view="history" role="tab">History</button>
+        <button class="tab" data-view="about" role="tab">About</button>
+      </nav>
+    </header>
+
+    <!-- ===================== TEST VIEW ===================== -->
+    <main id="view-test" class="view active">
+      <section class="conn-strip" id="connStrip">
+        <div class="chip" id="chipType"><span class="dot"></span><span id="connType">Detecting…</span></div>
+        <div class="chip muted" id="chipEff" hidden></div>
+        <div class="chip muted" id="chipIsp" hidden></div>
+      </section>
+
+      <div class="banner warn" id="dataWarn" hidden>
+        You're on <b>mobile data</b>. A full test can use roughly <b id="dataEst">50–300 MB</b>.
+        Choose <b>Quick</b> below to use less.
+      </div>
+      <div class="banner err" id="errorBox" hidden></div>
+
+      <section class="gauge-card">
+        <div class="gauge-wrap">
+          <svg viewBox="0 0 300 275" class="gauge" aria-hidden="true">
+            <defs>
+              <linearGradient id="gGrad" x1="0" x2="1" y1="0" y2="0">
+                <stop offset="0" stop-color="var(--accent-2)" />
+                <stop offset="1" stop-color="var(--accent)" />
+              </linearGradient>
+            </defs>
+            <path id="gTrack" class="g-track" />
+            <path id="gFill" class="g-fill" stroke="url(#gGrad)" />
+            <g id="gTicks" class="g-ticks"></g>
+            <line id="gNeedle" class="g-needle" x1="150" y1="150" x2="150" y2="60" />
+            <circle cx="150" cy="150" r="7" class="g-hub" />
+          </svg>
+          <div class="gauge-readout">
+            <div class="g-value" id="gValue">0</div>
+            <div class="g-unit">Mbps</div>
+            <div class="g-phase" id="gPhase">Ready</div>
+          </div>
+        </div>
+
+        <div class="progress"><div class="bar" id="progressBar"></div></div>
+
+        <div class="phases" id="phases">
+          <span data-phase="meta">Connect</span>
+          <span data-phase="ping">Ping</span>
+          <span data-phase="download">Download</span>
+          <span data-phase="upload">Upload</span>
+        </div>
+
+        <button class="go" id="goBtn">GO</button>
+
+        <div class="options">
+          <label>Mode
+            <select id="optDuration">
+              <option value="5">Quick (5 s)</option>
+              <option value="10" selected>Standard (10 s)</option>
+              <option value="15">Extended (15 s)</option>
+            </select>
+          </label>
+          <label>Connections
+            <select id="optStreams">
+              <option value="1">Single</option>
+              <option value="4" selected>Multi (4)</option>
+              <option value="8">Multi (8)</option>
+            </select>
+          </label>
+          <label>Tag network as
+            <select id="optTag">
+              <option value="auto" selected>Auto-detect</option>
+              <option value="wifi">Wi-Fi</option>
+              <option value="cellular">Mobile data</option>
+              <option value="ethernet">Ethernet</option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="metrics">
+        <div class="metric big"><div class="m-label">⬇ Download</div><div class="m-val"><span id="mDown">—</span><small>Mbps</small></div></div>
+        <div class="metric big"><div class="m-label">⬆ Upload</div><div class="m-val"><span id="mUp">—</span><small>Mbps</small></div></div>
+        <div class="metric"><div class="m-label">Ping (idle)</div><div class="m-val"><span id="mPing">—</span><small>ms</small></div></div>
+        <div class="metric"><div class="m-label">Jitter</div><div class="m-val"><span id="mJitter">—</span><small>ms</small></div></div>
+        <div class="metric"><div class="m-label">Latency ⬇ loaded</div><div class="m-val"><span id="mLdDown">—</span><small>ms</small></div></div>
+        <div class="metric"><div class="m-label">Latency ⬆ loaded</div><div class="m-val"><span id="mLdUp">—</span><small>ms</small></div></div>
+        <div class="metric"><div class="m-label">Min / Max ping</div><div class="m-val"><span id="mMinMax">—</span><small>ms</small></div></div>
+        <div class="metric"><div class="m-label">Request loss</div><div class="m-val"><span id="mLoss">—</span><small>%</small></div></div>
+        <div class="metric"><div class="m-label">Bufferbloat</div><div class="m-val"><span id="mBloat">—</span><small id="mBloatInc"></small></div></div>
+        <div class="metric"><div class="m-label">Data used</div><div class="m-val"><span id="mData">—</span><small>MB</small></div></div>
+      </section>
+
+      <section class="card" id="qualityCard" hidden>
+        <h3>What this connection is good for</h3>
+        <div class="quality" id="quality"></div>
+      </section>
+
+      <section class="card">
+        <h3>Connection details</h3>
+        <dl class="details">
+          <dt>Network type</dt><dd id="dType">—</dd>
+          <dt>Effective type</dt><dd id="dEff">—</dd>
+          <dt>Est. bandwidth (OS)</dt><dd id="dDownlink">—</dd>
+          <dt>Est. RTT (OS)</dt><dd id="dRtt">—</dd>
+          <dt>Data saver</dt><dd id="dSave">—</dd>
+          <dt>Public IP</dt><dd id="dIp">—</dd>
+          <dt>Provider (ISP)</dt><dd id="dIsp">—</dd>
+          <dt>Your location</dt><dd id="dLoc">—</dd>
+          <dt>Test server</dt><dd id="dServer">—</dd>
+          <dt>Platform</dt><dd id="dPlatform">—</dd>
+        </dl>
+      </section>
+
+      <div class="actions" id="resultActions" hidden>
+        <button class="btn" id="shareBtn">Share result</button>
+        <button class="btn ghost" id="againBtn">Test again</button>
+      </div>
+    </main>
+
+    <!-- ===================== HISTORY VIEW ===================== -->
+    <main id="view-history" class="view">
+      <section class="card">
+        <h3>Average by network type</h3>
+        <div class="compare" id="compare"><p class="empty">Run tests on Wi-Fi and mobile data to compare them here.</p></div>
+      </section>
+      <section class="card">
+        <div class="card-head">
+          <h3>Past results</h3>
+          <div>
+            <button class="btn small ghost" id="exportBtn">Export CSV</button>
+            <button class="btn small ghost" id="clearBtn">Clear</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table class="history">
+            <thead><tr><th>When</th><th>Network</th><th>⬇ Mbps</th><th>⬆ Mbps</th><th>Ping</th><th>Jitter</th></tr></thead>
+            <tbody id="historyBody"></tbody>
+          </table>
+        </div>
+        <p class="empty" id="historyEmpty">No tests yet.</p>
+      </section>
+    </main>
+
+    <!-- ===================== ABOUT VIEW ===================== -->
+    <main id="view-about" class="view">
+      <section class="card prose">
+        <h3>About</h3>
+        <p><b>Network Speed Test</b> measures your internet connection right from your browser or phone — on Wi-Fi, mobile data (4G/5G) or Ethernet.</p>
+        <h4>What is measured</h4>
+        <ul>
+          <li><b>Download / Upload</b> — throughput over several parallel connections; the first 25% of each phase (ramp-up) is excluded.</li>
+          <li><b>Ping</b> — median round-trip time to the nearest test server while the line is idle.</li>
+          <li><b>Jitter</b> — how much ping varies between consecutive samples.</li>
+          <li><b>Loaded latency</b> — ping measured <i>while</i> downloading/uploading. A big jump means <b>bufferbloat</b> (laggy calls &amp; games when someone is downloading).</li>
+          <li><b>Request loss</b> — share of latency probes that failed or timed out (an HTTP-level stand-in for packet loss).</li>
+          <li><b>Connection details</b> — network type, public IP, ISP, location and test server.</li>
+        </ul>
+        <p class="muted">Test servers: Cloudflare's global edge network (speed.cloudflare.com). Results are stored only on this device.</p>
+        <p class="credit">Developed by <b>Subrahmanyam</b></p>
+        <p class="muted" id="versionLine">Version 1.0.0</p>
+      </section>
+    </main>
+
+    <footer class="footer">Developed by <b>Subrahmanyam</b> · © <span id="year"></span></footer>
+  </div>
+
+  <!-- Capacitor runtime (no-op on the website, native bridge inside the app) -->
+  <script src="vendor/capacitor.js"></script>
+  <script src="vendor/capacitor-network.js"></script>
+  <script src="vendor/capacitor-share.js"></script>
+  <script src="js/speedtest.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

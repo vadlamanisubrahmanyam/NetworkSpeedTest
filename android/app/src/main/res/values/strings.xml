@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Network Speed Test</string>
+    <string name="title_activity_main">Network Speed Test</string>
+    <string name="package_name">com.subrahmanyam.networkspeedtest</string>
+    <string name="custom_url_scheme">com.subrahmanyam.networkspeedtest</string>
+</resources>

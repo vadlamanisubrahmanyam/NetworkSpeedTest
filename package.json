@@ -1,0 +1,26 @@
+{
+  "name": "networking-speed-test",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Network Speed Test - website + Android app (Capacitor). Developed by Subrahmanyam.",
+  "scripts": {
+    "vendor": "node scripts/vendor.mjs",
+    "serve": "node scripts/serve.mjs",
+    "build:web": "node scripts/vendor.mjs && node scripts/build-web.mjs",
+    "cap:sync": "npm run vendor && npx cap sync android",
+    "android:apk": "npm run cap:sync && cd android && gradlew assembleRelease"
+  },
+  "author": "Subrahmanyam",
+  "license": "MIT",
+  "dependencies": {
+    "@capacitor/android": "^8.6.2",
+    "@capacitor/core": "^8.6.2",
+    "@capacitor/network": "^8.0.1",
+    "@capacitor/share": "^8.0.3"
+  },
+  "devDependencies": {
+    "@capacitor/assets": "^4.0.0",
+    "@capacitor/cli": "^8.6.2",
+    "sharp": "^0.35.5"
+  }
+}
